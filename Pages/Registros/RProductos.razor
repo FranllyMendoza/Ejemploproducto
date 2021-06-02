@@ -1,0 +1,142 @@
+﻿@page "/Productos"
+@page "/Productos/{ProductoId:int}"
+
+@using Ejemploproducto.Models;
+@using Ejemploproducto.BLL;
+@using Blazored.Toast;
+@using Blazored.Toast.Services;
+
+@inject IToastService toast
+
+<EditForm Model="productos" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator/>
+    <div class="card">
+        <div class="card-header">
+            <h1>Registro de Productos</h1>
+        </div>
+        <div class="card-body">
+            <form />
+            <div class="form-row align-items-center">
+                <div class="col">
+                    <div class="form-group">
+                        <label>ProductosId</label>
+                        <div class="input-group">
+                            <InputNumber @bind-Value="productos.ProductoId" class="form-control col-4" />
+                            <div class="input-group-append">
+                                <button type="button" style="background-color: darkgray" class="btn btn-primary" @onclick="Buscar">
+                                    <span class="oi oi-magnifying-glass"></span> Buscar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <InputText @bind-Value="productos.Descripcion" class="form-control col-6" />
+                <ValidationMessage For="@(() => productos.Descripcion)" />
+            </div>
+
+            <div class="form-group">
+                <label>Existencia</label>
+                <InputNumber @bind-Value="productos.Existencia" class="form-control col-6" />
+                <ValidationMessage For="@(() => productos.Existencia)" />
+            </div>
+            <div class="form-group">
+                <label>Costo</label>
+                <InputNumber @bind-Value="productos.Costo" step="0.2" class="form-control col-6" />
+                <ValidationMessage For="@(() => productos.Costo)" />
+            </div>
+            <div class="form-group">
+                <label>Valor inventario</label>
+                <InputNumber @bind-Value="productos.valorInventario" class="form-control col-6" readonly="true" />
+                <ValidationMessage For="@(() => productos.valorInventario)" />
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="form-group text-left" display: inline-block>
+                <button type="button" class="btn btn-lg btn-primary" @onclick="Nuevo">
+                    <span class="oi oi-file mr-2"></span> Nuevo 
+                </button>
+
+                <button type="submit"  class="btn btn-lg btn-success">
+                    <span class="oi oi-account-login" style="transform:rotate(90deg)"></span> Guardar
+                </button>
+
+                <button type="button" class="btn btn-lg btn-danger" @onclick="Eliminar">
+                    <span class="oi oi-trash mr-2"></span> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+</EditForm>
+
+    @code {
+        [Parameter]
+        public int ProductoId { get; set; }
+        public Productos producto{ get; set; }
+
+        private Productos productos = new Productos();
+        List<Productos> ListaPersonas = new List<Productos>();
+
+        protected override void OnInitialized()
+        {
+            Nuevo();
+            Buscar();
+
+        }
+
+
+        public void Nuevo()
+        {
+            productos  = new Productos ();
+        }
+
+
+        private void Buscar()
+        {
+            if (productos.ProductoId > 0)
+            {
+                var encontrado = ProductosBLL.Buscar(productos.ProductoId);
+
+                if (encontrado != null)
+                    this.productos = encontrado;
+                else
+                    toast.ShowWarning("No se encontro este producto");
+            }
+        }
+
+        public void Guardar()
+        {
+            bool guardo;
+
+            productos.valorInventario = (productos.Costo * productos.Existencia);
+
+            guardo = ProductosBLL.Guardar(productos);
+
+            if (guardo)
+            {
+                Nuevo();
+                toast.ShowSuccess("transacción exitosa ");
+            }
+            else
+                toast.ShowError("transacción fallida");
+        }
+
+        public void Eliminar()
+        {
+            bool elimino;
+
+            elimino = ProductosBLL.Eliminar(productos.ProductoId);
+
+            if (elimino)
+            {
+                Nuevo();
+                toast.ShowSuccess("transacción exitosa ");
+            }
+            else
+                toast.ShowError("transacción fallida ");
+        }
+
+    }
